@@ -1,59 +1,141 @@
 # Safety Planning Android App
 
+## Video Demonstration
+
+
+
+https://github.com/user-attachments/assets/45974c8e-6764-4d32-9863-8748c1806ec4
+
+
+
 ## Purpose
-This app empowers survivors by helping them assess, plan, and manage their safety before, during, and after an abusive relationship. It is designed to be flexible and personalized so plans can be tailored to each person’s needs.
 
-## Inspiration & Resources
-- **Model site:** [The Hotline's Safety Planning Tool](https://www.thehotline.org/)
-- **Victim services taxonomy:** Mirror the core categories from the hotline in app modules or tabs.
-- **App examples:** Aspire News App, myPlan App, Bright Sky Canada offer reference points for flows and content organization.
+This app empowers survivors by helping them assess, plan, and manage their safety before, during, and after an abusive relationship. It helps users create and manage a personalized safety plan, store emergency information, and find local support res into functional modules.
 
-## Important Design Principles
-- **Privacy & security:** Never collect or store identifying information such as names, addresses, photos, or other personally identifiable uploads.
-- **Survivor-controlled data:** Only store what is necessary and defer sensitive uploads.
-- **Trauma-informed language:** Use gentle, non-blaming, empowering language. Avoid legal jargon where possible.
-- **Ethical considerations:** Clearly state the app is **not a substitute for emergency services** and cannot guarantee prevention of harm.
 
 ## Essential Features
 
-### 1. Personalized Safety Plan Builder
-- **Dynamic questionnaire**
-  - Start by asking about the user’s relationship status (planning to leave, post-separation, etc.).
-  - Each status presents a tailored set of questions; only relevant questions appear.
-  - Answers update a plan JSON in Firebase Realtime Database.
-  - Users can revisit and edit answers; all changes sync back to Realtime DB.
-- **Plan generation**
-  - Provide relevant tips based on answered questions.
-  - Offer a short list of tips in each plan section (e.g., 3 items for shelter planning).
-  - Render tips in a scrollable list (RecyclerView) with per-item actions.
-  - Persist changes and selections to Realtime DB.
-  - Map each plan section to JSON using `question_id` keys.
+- **PIN protection**: returning users can unlock the app with a locally stored PIN encrypted through Android Keystore.
+- **Dynamic questionnaire**: questions are loaded from `app/src/main/assets/questions.json` and are split into warm-up, branch-specific, and follow-up sections.
+- **Personalized safety plan**: submitted questionnaire answers are saved to Firebase and transformed into safety tips.
+- **Emergency information storage**: users can manage emergency contacts, safe locations, medications, and important documents.
+- **Document upload and download**: files can be uploaded to Firebase Storage, saved with metadata, edited, deleted, and downloaded.
+- **Local support directory**: support services are loaded from `app/src/main/assets/services_directory.json` and filtered by the user's selected city.
+- **Emergency exit**: a floating action button opens Google in the browser, clears the app task, and removes the app from recents.
 
-### 2. Emergency Exit Button
-- **Quick-escape control:** A persistent exit icon/button on every screen.
-- **Behavior on tap:**
-  - Redirects to a neutral website (e.g., a search engine) in a webview or browser.
-  - Immediately terminates the app session to clear state.
 
-### 3. Secure Access Options
-- **PIN setup & storage:** After the first successful Firebase login, prompt users to create a 4–6 digit PIN. Store it securely with AndroidX Security via `SharedPreferences` or Keystore.
-- **Unlock flow on relaunch:** Present the same login screen with two options: enter PIN (validated against encrypted value) or use Firebase login. PIN path should bypass full authentication. PIN does **not** need to match MVP credentials.
+## Technical Architecture
 
-### 4. Storage of Emergency Information
-- **Data categories:** IDs, court orders, emergency contacts, safe locations, medications (names, dosage), and other critical notes.
-- **CRUD operations:** Allow users to add, edit, and delete items in each category.
-- **Cloud strategy:**
-  - Store metadata (titles, descriptions) in Firebase Realtime DB.
-  - Store binary assets (PDFs, photos) in Firebase Firestore, saving only references/URLs in the database.
+| Component | Technology / Implementation |
+| --- | --- |
+| **Frontend UI** | Java, Android SDK, XML (`LinearLayout`, `RecyclerView`) |
+| **Backend & Database** | Firebase Authentication, Firebase Realtime Database |
+| **Cloud Storage** | Firebase Storage |
+| **Security** | AndroidX Security (Encrypted `SharedPreferences`, Keystore) |
+| **Design Pattern** | Model-View-Presenter (MVP) specifically applied to the login module |
+| **Testing** | JUnit, Mockito, AndroidX Test, Espresso |
 
-### 5. Support Connection
-- Dedicated page listing direct links to victim services, hotlines, shelters, legal aid, and police.
-- Use a predefined directory (JSON/HashMap) with ~5 entries per major Canadian city; city selection comes from the questionnaire.
 
-## Technical Notes
-- Build with Android, Firebase Realtime Database, and Firestore integration.
-- Use `RecyclerView` for plan tip lists and `ActionView`/`FloatingActionButton` for the emergency exit control.
-- Favor JSON or GSON for serializing questionnaire answers and plan sections.
 
-## Safety & Legal Disclaimer
-This app cannot guarantee safety or replace emergency assistance. In any immediate danger, users should contact emergency services directly.
+## Project Structure
+
+```text
+ProjectB07/
+|-- app/
+|   |-- build.gradle.kts
+|   |-- google-services.json
+|   |-- proguard-rules.pro
+|   `-- src/
+|       |-- main/
+|       |   |-- AndroidManifest.xml
+|       |   |-- assets/
+|       |   |   |-- questions.json
+|       |   |   `-- services_directory.json
+|       |   |-- java/com/group15/b07project/
+|       |   |   |-- *Activity.java
+|       |   |   |-- *Fragment.java
+|       |   |   |-- *Adapter.java
+|       |   |   `-- model/helper classes
+|       |   `-- res/
+|       |       |-- drawable/
+|       |       |-- font/
+|       |       |-- layout/
+|       |       |-- values/
+|       |       `-- xml/
+|       |-- test/
+|       `-- androidTest/
+|-- docs/
+|   `-- PULL_REQUEST_TEMPLATE.md
+|-- gradle/
+|   `-- libs.versions.toml
+|-- build.gradle.kts
+|-- settings.gradle.kts
+`-- README.md
+```
+
+## Key App Components
+
+### Activities
+
+- `LaunchActivity`: app launcher; decides whether to show login or PIN/auth choice.
+- `LoginActivity`, `SignupActivity`, `ResetActivity`: Firebase email/password authentication flows.
+- `AuthChoiceActivity`, `PinLoginActivity`, `PinSetupActivity`: PIN setup and unlock flow.
+- `DisclaimerActivity`: stores per-user disclaimer acceptance.
+- `MainActivity`: hosts the main fragments and emergency exit button.
+
+### Fragments
+
+- `HomeFragment`: main navigation screen.
+- `QuestionnaireFragment`: renders questionnaire pages and saves answers.
+- `PlanGenerationFragment`: generates the personalized safety plan from saved answers.
+- `StorageOfEmergencyInfoFragment`: menu for emergency information modules.
+- `EmergencyContactsFragment`: add, edit, delete, and list emergency contacts.
+- `SafeLocationsFragment`: add, edit, delete, and list safe locations.
+- `MedicationsFragment`: add, edit, delete, and list medications.
+- `DocumentsToPackFragment`: upload, view, edit, download, and delete document files.
+- `SupportConnectionFragment`: displays city-based support resources.
+
+### Helpers and Models
+
+- `PinManager`: encrypts, stores, retrieves, and verifies user PINs.
+- `FirebaseFileHelper`: uploads files to Firebase Storage and stores document metadata.
+- `ParseJson`: loads JSON assets into Java model objects.
+- `LoginContract`, `LoginModel`, `LoginPresenter`: MVP-style login logic.
+- `Question`, `QuestionsBundle`, `ServiceDirectory`, `ServiceEntry`, `EmergencyContact`, `SafeLocation`, `Medication`, `DocsDataStructure`, and `DocMetadataStructure`: data models used across the app.
+
+## Firebase Data Layout
+
+The app stores user-scoped data under the current Firebase UID:
+
+```text
+users/{uid}/newUser
+users/{uid}/questionnaire
+users/{uid}/EmergencyInfo/EmergencyContacts
+users/{uid}/EmergencyInfo/SafeLocations
+users/{uid}/EmergencyInfo/Medications
+users/{uid}/Documents/{fileId}
+```
+
+Uploaded document files are stored in Firebase Storage:
+
+```text
+Documents/{fileId}.{extension}
+```
+
+Document metadata stored in Realtime Database includes title, description, upload date, download URL, and storage path.
+
+
+## Setup
+
+1. Open the project root in Android Studio.
+2. Sync Gradle.
+3. Ensure `app/google-services.json` is present and configured for package `com.group15.b07project`.
+4. In Firebase, enable Email/Password authentication.
+5. Configure Firebase Realtime Database and Firebase Storage for the project.
+6. Run the `app` configuration on an emulator or Android device running API 24 or newer.
+
+Android Studio will generate `local.properties` for the local SDK path. Do not commit local machine paths or generated build output.
+
+## Legal & Safety Disclaimer
+
+**This app is not a substitute for emergency services.** Safety plans are personal and not guaranteed to prevent harm. If you are in immediate danger, please contact 911 or your local emergency services directly.
