@@ -2,7 +2,9 @@
 
 ## Purpose & Video Demonstration
 
-This app empowers survivors by helping them assess, plan, and manage their safety before, during, and after an abusive relationship. It helps users create and manage a personalized safety plan, store emergency information, and find local support res into functional modules.
+This app empowers survivors by helping them assess, plan, and manage their safety before, during, and after an abusive relationship. It helps users create and manage a personalized safety plan, store emergency information, and find local support resources. 
+
+The app uses Firebase for authentication, user data, and document storage, with an additional local PIN layer protected by Android Keystore. 
 
 https://github.com/user-attachments/assets/45974c8e-6764-4d32-9863-8748c1806ec4
 
@@ -21,7 +23,8 @@ https://github.com/user-attachments/assets/45974c8e-6764-4d32-9863-8748c1806ec4
 
 | Component | Technology / Implementation |
 | --- | --- |
-| **Frontend UI** | Java, Android SDK, XML (`LinearLayout`, `RecyclerView`) |
+| **User Interface (Visuals)** | XML Layouts (`LinearLayout`, `RecyclerView`) |
+| **Client-Side Logic**| Java (Activities, Fragments, Adapters), Android SDK |
 | **Backend & Database** | Firebase Authentication, Firebase Realtime Database |
 | **Cloud Storage** | Firebase Storage |
 | **Security** | AndroidX Security (Encrypted `SharedPreferences`, Keystore) |
